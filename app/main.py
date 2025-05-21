@@ -3,13 +3,33 @@ from fastapi.params import Body
 from fastapi.responses import Response
 from pydantic import BaseModel
 from random import randrange
+import psycopg
+from psycopg.rows import dict_row
+import time
 
 app = FastAPI()
 class Post(BaseModel):
     title: str
     content: str
     published: bool = True
-    rating: float = None
+
+while True:
+    try:
+        conn = psycopg.connect(
+            host="localhost",
+            dbname="fastapi",
+            user="postgres",
+            password="password",
+            row_factory=dict_row
+        )
+        cursor = conn.cursor()
+        print("Database connection successful")
+        break
+    except Exception as error:
+        print("Database connection failed")
+        print("Error: ", error)
+        time.sleep(2)
+        break
 
 my_posts = [
     {   "title": "title of Post 1", "content": "Content of post 1", "id": 1 },  
@@ -34,14 +54,16 @@ def read_root():
 
 @app.get("/posts")
 def get_posts():
-    return {"message": my_posts}
+    cursor.execute("SELECT * FROM posts")
+    posts = cursor.fetchall()
+    return {"message": posts}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_posts(post: Post):
-    post_dict = post.dict()
-    post_dict['id'] = randrange(0, 1000000)
-    my_posts.append(post_dict)
-    return {"data": post_dict}
+    cursor.execute("INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *", (post.title, post.content, post.published))
+    new_post = cursor.fetchone()
+    conn.commit()
+    return {"data": new_post}
 
 
 
