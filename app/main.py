@@ -1,8 +1,9 @@
-from fastapi import FastAPI, status, HTTPException, Depends, Response
-from sqlalchemy.orm import Session
-from . import models, schemas, utils	
-from .database import engine, get_db
+from fastapi import FastAPI
+from . import models
+from .database import engine
 from .routers import post, user, auth
+from .config import settings
+
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -16,8 +17,4 @@ app.include_router(auth.router)
 @app.get("/")
 def read_root():
     return {"message": "This is your post"}
-
-
-################################################
-#user routes
 
