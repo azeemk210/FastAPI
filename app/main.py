@@ -3,11 +3,22 @@ from . import models
 from .database import engine
 from .routers import post, user, auth, vote
 from .config import settings
-
+from fastapi.middleware.cors import CORSMiddleware
 
 #models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+
+origins = ["https://www.google.com"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows all origins, you can specify a list of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods, you can specify a list of allowed methods
+    allow_headers=["*"],  # Allows all headers, you can specify a list of allowed headers
+)
 
 
 app.include_router(post.router)
